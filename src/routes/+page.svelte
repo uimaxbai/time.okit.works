@@ -168,7 +168,15 @@ time div {
   font-size: 2rem;
   background: transparent;
 }
+
+.fs-button {
+  font-size: 1.3em;
+  border: 1px solid lightgray;
+  border-radius: 5px;
+  padding: .5em;
+}
 </style>
+
 
 <svelte:head>
   <title>The Time - exact time, to the second</title>
@@ -201,132 +209,120 @@ time div {
   <meta name="twitter:image" content="https://time.okit.works/icons/opengraph.png">
 </svelte:head>
 
-
-<main class="main transition flex min-h-screen flex-col items-center justify-center p-4" class:dark={theme === 1} class:light={theme === 0} style="background: {hex}; color: rgba({rgb.r}, {rgb.g}, {rgb.b}, {rgb.a});">
-    <div>
-      <h1 class="timeStr">
-        <time datetime={dateStr} class="timeEl flex flex-col">
-          <span class="dateString">{dateStr1}</span>
-          <div class="flex items-baseline">
-            <button aria-label="Show options" on:click={() => advancedShown = !advancedShown} class="toggleButton">
-              {#if advancedShown}
-                <div in:fade={{ delay: 0, duration: 200 }}>
-                  <Fa icon={faAngleUp} style="font-size: initial;" />
-                </div>
-              {:else}
-                <div in:fade={{ delay: 0, duration: 200 }}>
-                  <Fa icon={faAngleDown} style="font-size: initial;" />
-                </div>
+<Fullscreen let:onToggle>
+  <main class="main transition flex min-h-screen flex-col items-center justify-center p-4" class:dark={theme === 1} class:light={theme === 0} style="background: {hex}; color: rgba({rgb.r}, {rgb.g}, {rgb.b}, {rgb.a});">
+      <div>
+        <h1 class="timeStr">
+          <time datetime={dateStr} class="timeEl flex flex-col">
+            <span class="dateString">{dateStr1}</span>
+            <div class="flex items-baseline">
+              {#if toggleShown}
+                <button transition:fade={{ delay: 0, duration: 200 }} aria-label="Show options" on:click={() => advancedShown = !advancedShown} class="toggleButton">
+                  {#if advancedShown}
+                    <div in:fade={{ delay: 0, duration: 200 }}>
+                      <Fa icon={faAngleUp} style="font-size: initial;" />
+                    </div>
+                  {:else}
+                    <div in:fade={{ delay: 0, duration: 200 }}>
+                      <Fa icon={faAngleDown} style="font-size: initial;" />
+                    </div>
+                  {/if}
+                </button>
               {/if}
-            </button>
-            <span>{timeStr}</span>
-            <span class='ms'>{msStr}</span>
-            <span id="tower-cell" class='tower-cell ml-2'><Fa icon={faTowerCell} /></span>
-          </div>
-        </time>
-      </h1>
-      <div class="info-div flex gap-2 flex-row justify-between w-full">
-        <div class="gap-2 flex items-center">
-          {#if advancedShown}
-            <div class="theme-selector canBeHidden">
-              <button aria-label="Change to light mode" class="light" on:click={() => theme = 0}>{h}</button>
-              <span class="seperator">:</span>
-              <button aria-label="Change to dark mode" class="dark" on:click={() => theme = 1}>{m}</button>
-              <span class="seperator">:</span>
-              <button aria-label="Define a custom theme" class="custom" on:click={() => theme = 2}>{s}</button>
+              <span>{timeStr}</span>
+              <span class='ms'>{msStr}</span>
+              <span id="tower-cell" class='tower-cell ml-2'><Fa icon={faTowerCell} /></span>
             </div>
-            {#if theme === 2}
-              <ColorPicker
-                bind:hex
-                label=""
-              />
-              <ColorPicker
-                bind:rgb
-                label=""
-              />
+          </time>
+        </h1>
+        <div class="info-div flex gap-2 flex-row justify-between w-full">
+          <div class="gap-2 flex items-center">
+            {#if advancedShown && toggleShown}
+              <div transition:fade={{ delay: 0, duration: 200 }} class="theme-selector">
+                <button aria-label="Change to light mode" class="light" on:click={() => theme = 0}>{h}</button>
+                <span class="seperator">:</span>
+                <button aria-label="Change to dark mode" class="dark" on:click={() => theme = 1}>{m}</button>
+                <span class="seperator">:</span>
+                <button aria-label="Define a custom theme" class="custom" on:click={() => theme = 2}>{s}</button>
+              </div>
+              {#if theme === 2}
+                <ColorPicker
+                  bind:hex
+                  label=""
+                />
+                <ColorPicker
+                  bind:rgb
+                  label=""
+                />
+              {/if}
+              <button class="fs-button" on:click={() => {fullscreen = !fullscreen; onToggle();} }>
+                {#if fullscreen}
+                  <Fa icon={faCompress} />
+                {:else if !fullscreen}
+                  <Fa icon={faExpand} />
+                {/if}
+              </button>
+              <span id="timezone" transition:fade={{ delay: 0, duration: 200 }} class="timezone">Timezone: {timezone}</span>
             {/if}
-            <span id="timezone" transition:fade={{ delay: 0, duration: 200 }} class="timezone canBeHidden">Timezone: {timezone}</span>
+          </div>
+          {#if advancedShown && toggleShown}
+            <span transition:fade={{ delay: 0, duration: 200 }}>UTC: <time id="utc" datetime={utcDateStr}>{utcDateStr1} {utcTimeStr}</time></span>
           {/if}
         </div>
-        {#if advancedShown}
-          <span class="canBeHidden" transition:fade={{ delay: 0, duration: 200 }}>UTC: <time id="utc" datetime={utcDateStr}>{utcDateStr1} {utcTimeStr}</time></span>
+        {#if advancedShown && toggleShown}
+          <div transition:fade={{ delay: 0, duration: 200 }} class="flex flex-col gap-2 mt-4">
+            <span>Unix: <time id="unix" datetime={date.toTimeString()}>{date.getTime()}</time> </span>
+            <span>IP: {$page.data.ip}</span>
+            <span>General Location: {$page.data.city}, {$page.data.region}, {$page.data.country}</span>
+          </div>
         {/if}
       </div>
-      {#if advancedShown}
-        <div transition:fade={{ delay: 0, duration: 200 }} class="flex flex-col gap-2 mt-4 canBeHidden">
-          <span>Unix: <time id="unix" datetime={date.toTimeString()}>{date.getTime()}</time> </span>
-          <span>IP: {$page.data.ip}</span>
-          <span>General Location: {$page.data.city}, {$page.data.region}, {$page.data.country}</span>
-        </div>
+      {#if toggleShown}
+        <a class="footer" href="https://gitlab.com/uimaxbai/time.okit.works" target="_blank">
+          <Fa icon={faGitlab} />
+        </a>
       {/if}
-    </div>
-    <a class="canBeHidden footer" href="https://gitlab.com/uimaxbai/time.okit.works" target="_blank">
-      <Fa icon={faGitlab} />
-    </a>
-</main>
+  </main>
+</Fullscreen>
 
 
 <script lang="ts">
   import Fa from '../../node_modules/svelte-fa/dist/fa.svelte';
   import { fade } from 'svelte/transition';
-  import { faTowerCell, faAngleDown, faAngleUp } from '@fortawesome/free-solid-svg-icons/index.js';
+  import { faTowerCell, faAngleDown, faAngleUp, faExpand, faCompress } from '@fortawesome/free-solid-svg-icons/index.js';
   import { faGitlab } from '@fortawesome/free-brands-svg-icons/index.js';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
+  import Fullscreen from "$lib/Fullscreen.svelte";
   import ColorPicker from 'svelte-awesome-color-picker';
   let theme = 1;
+  let toggleShown = true;
   let hex: string = "#000000ff";
+  let fullscreen = false;
   let rgb = {
     "r": 255,
     "g": 255,
     "b": 255,
     "a": 1,
   }
-  /* onMount(() => {
-    if (theme === 2) {
-      document.body.classList.remove('dark');
-      document.body.classList.remove('light');
-      document.body.style.background = hex;
-      document.body.style.color = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${rgb.a})`;
-      document.querySelector<HTMLElement>(".custom")!.style.background = hex;
-      document.querySelector<HTMLElement>(".custom")!.style.color = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${rgb.a})`
-    }
-  }); */
   let advancedShown = false;
   var date = new Date();
   let diff: number = 0;
 
   onMount(() => {
-    /* document.querySelector("button[role='switch']")!.addEventListener("click", () => {
-      localStorage.setItem("theme", switchValue.toString());
-    });
-    setInterval(() => {
-      localStorage.setItem("theme", switchValue.toString());
-    }, 1000); */
-    /* setInterval(() => {
-      console.log(hex, rgb);
-    }, 1000); */
+    theme = parseInt(localStorage.getItem("theme") || "1");
+    localStorage.setItem("theme", theme.toString());
 
-    if (localStorage.getItem("theme") === "0") {
-      theme = 0;
-    }
-    else if (localStorage.getItem("theme") === "1") {
-      theme = 1;
-    }
-    else if (localStorage.getItem("theme") === "2") {
-      theme = 2;
-    }
-    else if (localStorage.getItem("theme") !== "0" && localStorage.getItem("theme") !== "1" && localStorage.getItem("theme") !== "2"){
-      theme = 1;
-      localStorage.setItem("theme", theme.toString());
-    }
-    else {
-      theme = 0;
-    }
     if (localStorage.getItem("bg") !== null && localStorage.getItem("rgb") !== null) {
       hex = localStorage.getItem("bg")!;
       rgb = JSON.parse(localStorage.getItem("rgb")!);
     }
+
+    /* document.querySelector(".fs-button")?.addEventListener("mousedown", () => {
+      var fsEl = document.querySelector("html");
+      fsEl?.requestFullscreen();
+      fullscreen = !fullscreen;
+    }); */
 
     setInterval(() => {
       date = new Date((new Date()).getTime() + diff);
@@ -342,98 +338,100 @@ time div {
         localStorage.setItem("rgb", JSON.stringify(rgb));
       }
     }, 10);
-    setInterval(() => {
+    var timeApiInterval = setInterval(() => {
       actuallyGetTime().then((time) => {
-        date = new Date(time);
+        if (time === null) {
+          clearInterval(timeApiInterval);
+          timeApiInterval = setInterval(() => {
+            actuallyGetTime().then((time) => {
+              if (time === null) {
+                clearInterval(timeApiInterval);
+
+              }
+              else {
+                date = new Date(time);
+                clearInterval(timeApiInterval);
+              }
+            });
+          }, 10000);
+        }
+        else {
+          date = new Date(time);
+          clearInterval(timeApiInterval);
+          timeApiInterval = setInterval(() => {
+            actuallyGetTime().then((time) => {
+              if (time === null) {
+                clearInterval(timeApiInterval);
+
+              }
+              else {
+                date = new Date(time);
+                clearInterval(timeApiInterval);
+              }
+            });
+          }, 2500);
+        }
       });
-    }, 1000);
+    }, 2500);
 
     var mousedown = false;
     let timeout: number;
     var timeout2: number = 2500;
 
+    const timeHideToggle = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        toggleShown = false;
+      }, timeout2);
+    };
+
     document.addEventListener("mousemove", () => {
-      document.querySelector<HTMLElement>(".toggleButton")!.style.opacity = "1";
-      document.querySelectorAll<HTMLElement>(".canBeHidden").forEach((element) => {
-        element.style.opacity = "1";
-      });
-      document.querySelectorAll<HTMLElement>(".color-picker").forEach((element) => {
-        element.style.opacity = "1";
-      });
+      toggleShown = true;
       if (mousedown === false) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          document.querySelector<HTMLElement>(".toggleButton")!.style.opacity = "0";
-          document.querySelectorAll<HTMLElement>(".canBeHidden").forEach((element) => {
-            element.style.opacity = "0";
-          });
-          document.querySelectorAll<HTMLElement>(".color-picker").forEach((element) => {
-            element.style.opacity = "0";
-          });
-        }, 2500);
+        timeHideToggle();
       }
     });
     document.addEventListener("mousedown", () => {
       mousedown = true;
-      document.querySelector<HTMLElement>(".toggleButton")!.style.opacity = "1";
-      document.querySelectorAll<HTMLElement>(".canBeHidden").forEach((element) => {
-        element.style.opacity = "1";
-      });
-      document.querySelectorAll<HTMLElement>(".color-picker").forEach((element) => {
-        element.style.opacity = "1";
-      });
+      toggleShown = true;
     });
     document.addEventListener("mouseup", () => {
       mousedown = false;
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        document.querySelector<HTMLElement>(".toggleButton")!.style.opacity = "0";
-        document.querySelectorAll<HTMLElement>(".canBeHidden").forEach((element) => {
-          element.style.opacity = "0";
-        });
-        document.querySelectorAll<HTMLElement>(".color-picker").forEach((element) => {
-          element.style.opacity = "0";
-        });
-      }, timeout2);
+      timeHideToggle();
     });
     document.addEventListener("keydown", () => {
       mousedown = true;
-      document.querySelector<HTMLElement>(".toggleButton")!.style.opacity = "1";
-      document.querySelectorAll<HTMLElement>(".canBeHidden").forEach((element) => {
-        element.style.opacity = "1";
-      });
-      document.querySelectorAll<HTMLElement>(".color-picker").forEach((element) => {
-        element.style.opacity = "1";
-      });
+      toggleShown = true;
     });
     document.addEventListener("keyup", () => {
       mousedown = false;
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        document.querySelector<HTMLElement>(".toggleButton")!.style.opacity = "0";
-        document.querySelectorAll<HTMLElement>(".canBeHidden").forEach((element) => {
-          element.style.opacity = "0";
-        });
-        document.querySelectorAll<HTMLElement>(".color-picker").forEach((element) => {
-          element.style.opacity = "0";
-        });
-      }, timeout2);
+      timeHideToggle();
     });
-    timeout = setTimeout(() => {
-      document.querySelector<HTMLElement>(".toggleButton")!.style.opacity = "0";
-      document.querySelectorAll<HTMLElement>(".color-picker").forEach((element) => {
-        element.style.opacity = "0";
-      });
-    }, timeout2);
+    timeHideToggle();
   });
 
+  const nthNumber = (number: number) => {
+    if (number > 3 && number < 21) return "th";
+    switch (number % 10) {
+      case 1:
+        return "st";
+      case 2:
+        return "nd";
+      case 3:
+        return "rd";
+      default:
+        return "th";
+    }
+  };
+
+  var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
   $: ms = ('0' + Math.floor(date.getMilliseconds() / 10)).slice(-2);
   $: s = ('0' + date.getSeconds()).slice(-2);
   $: m = ('0' + date.getMinutes()).slice(-2);
   $: h = ('0' + date.getHours()).slice(-2);
   $: d = ('0' + date.getDate()).slice(-2);
   $: dateStr = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + "T" + h + ":" + m + ":" + s + "." + ms;
-  $: dateStr1 = d + "/" + ('0' + (date.getMonth() + 1).toString()).slice(-2) + "/" + date.getFullYear();
+  $: dateStr1 = (days[date.getDay()]).slice(0, 3) + " " + d + "/" + ('0' + (date.getMonth() + 1).toString()).slice(-2) + "/" + date.getFullYear();
   $: timeStr = h + ":" + m + ":" + s;
   $: msStr = "." + ms;
   $: utcDateStr = date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + date.getUTCDate() + "T" + ('0' + date.getUTCHours()).slice(-2) + ":" + ('0' + date.getUTCMinutes()).slice(-2) + ":" + ('0' + date.getUTCSeconds()).slice(-2) + "." + ('0' + Math.floor(date.getUTCMilliseconds() / 10)).slice(-2);
@@ -447,6 +445,9 @@ time div {
   async function getTime(timezone: string) {
     try {
       const response = await fetch('https://worldtimeapi.org/api/ip');
+      if (!response.ok) {
+        throw new Error("Server returned non-OK status. Error code: "+response.status + " " + response.statusText)
+      }
       const data = await response.json();
       const serverTime = new Date(Date.parse(data.datetime));
       const localTime = new Date();
@@ -455,20 +456,27 @@ time div {
     }
     catch (e) {
       console.error(e);
-      return diff;
+      return null;
     }
   }
 
   async function actuallyGetTime() {
     let timezoneRaw = Intl.DateTimeFormat().resolvedOptions().timeZone;
     let response = await getTime(timezoneRaw);
-    if (Number.isNaN(response)) {
+    if (response === null) {
       document.getElementById("tower-cell")!.style.opacity = "0.5";
+      return null;
     }
     else {
-      document.getElementById("tower-cell")!.style.opacity = "1";
+      if (Number.isNaN(response)) {
+        document.getElementById("tower-cell")!.style.opacity = "0.5";
+        return null;
+      }
+      else {
+        document.getElementById("tower-cell")!.style.opacity = "1";
+      }
+      let date1 = new Date((new Date()).getTime() + response);
+      return date1.getTime();
     }
-    let date1 = new Date((new Date()).getTime() + response);
-    return date1.getTime();
   }
 </script>
