@@ -1,0 +1,21 @@
+{
+    "theme_color": "#eeeeee",
+    "background_color": "#111111",
+    "display": "fullscreen",
+    "scope": "/",
+    "start_url": "/",
+    "name": "The Time",
+    "short_name": "Time",
+    "icons": [
+        {
+            "src": "/icons/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/icons/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

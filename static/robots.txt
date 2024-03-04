@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://time.okit.works/sitemap.xml
