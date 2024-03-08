@@ -207,6 +207,15 @@ time div {
   <meta name="og:image" content="https://time.okit.works/icons/opengraph.png">
   <meta name="og:image:alt" content="The Time">
   <meta name="twitter:image" content="https://time.okit.works/icons/opengraph.png">
+  <script type="application/ld+json">
+    {
+      "@context" : "https://schema.org",
+      "@type" : "WebSite",
+      "name" : "The Time",
+      "alternateName" : "Time",
+      "url" : "https://time.okit.works/"
+    }
+  </script>
 </svelte:head>
 
 <Fullscreen let:onToggle>
