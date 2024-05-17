@@ -3,11 +3,13 @@
   font-family:'JetBrains Mono';
   src: url(/fonts/JetBrainsMono-Bold.woff2);
   font-weight: bold;
+  font-display: swap;
 }
 @font-face {
   font-family:'JetBrains Mono';
   src: url(/fonts/JetBrainsMono-Regular.woff2);
   font-weight: normal;
+  font-display: swap;
 }
 
 * {
