@@ -1,8 +1,13 @@
 <script lang="ts">
     import { onMount, onDestroy, createEventDispatcher } from "svelte";
     import screenfull from "screenfull";
+  interface Props {
+    children?: import('svelte').Snippet<[any]>;
+  }
+
+  let { children }: Props = $props();
   
-    let component: HTMLElement;
+    let component: HTMLElement = $state();
     const dispatch = createEventDispatcher<{ change: never; error: never }>();
   
     onMount(() => {
@@ -38,5 +43,5 @@
     });
   </script>
   
-  <div style="width:0; height:0" bind:this={component} />
-  <slot {onToggle} {onRequest} {onExit} />
+  <div style="width:0; height:0" bind:this={component}></div>
+  {@render children?.({ onToggle, onRequest, onExit, })}

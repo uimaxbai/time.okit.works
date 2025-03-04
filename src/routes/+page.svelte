@@ -220,80 +220,82 @@ time div {
   </script>
 </svelte:head>
 
-<Fullscreen let:onToggle>
-  <main class="main transition flex min-h-screen flex-col items-center justify-center p-4" class:dark={theme === 1} class:light={theme === 0} style="background: {hex}; color: rgba({rgb.r}, {rgb.g}, {rgb.b}, {rgb.a});">
-      <div>
-        <h1 class="timeStr">
-          <time datetime={dateStr} class="timeEl flex flex-col">
-            <span class="dateString">{dateStr1}</span>
-            <div class="flex items-baseline">
-              {#if toggleShown}
-                <button transition:fade={{ delay: 0, duration: 200 }} aria-label="Show options" on:click={() => advancedShown = !advancedShown} class="toggleButton">
-                  {#if advancedShown}
-                    <div in:fade={{ delay: 0, duration: 200 }}>
-                      <Fa icon={faAngleUp} style="font-size: initial;" />
-                    </div>
-                  {:else}
-                    <div in:fade={{ delay: 0, duration: 200 }}>
-                      <Fa icon={faAngleDown} style="font-size: initial;" />
-                    </div>
+<Fullscreen >
+  {#snippet children({ onToggle })}
+    <main class="main transition flex min-h-screen flex-col items-center justify-center p-4" class:dark={theme === 1} class:light={theme === 0} style="background: {hex}; color: rgba({rgb.r}, {rgb.g}, {rgb.b}, {rgb.a});">
+        <div>
+          <h1 class="timeStr">
+            <time datetime={dateStr} class="timeEl flex flex-col">
+              <span class="dateString">{dateStr1}</span>
+              <div class="flex items-baseline">
+                {#if toggleShown}
+                  <button transition:fade={{ delay: 0, duration: 200 }} aria-label="Show options" onclick={() => advancedShown = !advancedShown} class="toggleButton">
+                    {#if advancedShown}
+                      <div in:fade={{ delay: 0, duration: 200 }}>
+                        <Fa icon={faAngleUp} style="font-size: initial;" />
+                      </div>
+                    {:else}
+                      <div in:fade={{ delay: 0, duration: 200 }}>
+                        <Fa icon={faAngleDown} style="font-size: initial;" />
+                      </div>
+                    {/if}
+                  </button>
+                {/if}
+                <span>{timeStr}</span>
+                <span class='ms'>{msStr}</span>
+                <span id="tower-cell" class='tower-cell ml-2'><Fa icon={faTowerCell} /></span>
+              </div>
+            </time>
+          </h1>
+          <div class="info-div flex gap-2 flex-row justify-between w-full">
+            <div class="gap-2 flex items-center">
+              {#if advancedShown && toggleShown}
+                <div transition:fade={{ delay: 0, duration: 200 }} class="theme-selector">
+                  <button aria-label="Change to light mode" class="light" onclick={() => theme = 0}>{h}</button>
+                  <span class="seperator">:</span>
+                  <button aria-label="Change to dark mode" class="dark" onclick={() => theme = 1}>{m}</button>
+                  <span class="seperator">:</span>
+                  <button aria-label="Define a custom theme" class="custom" onclick={() => theme = 2}>{s}</button>
+                </div>
+                {#if theme === 2}
+                  <ColorPicker
+                    bind:hex
+                    label=""
+                  />
+                  <ColorPicker
+                    bind:rgb
+                    label=""
+                  />
+                {/if}
+                <button class="fs-button" onclick={() => {fullscreen = !fullscreen; onToggle();}}>
+                  {#if fullscreen}
+                    <Fa icon={faCompress} />
+                  {:else if !fullscreen}
+                    <Fa icon={faExpand} />
                   {/if}
                 </button>
+                <span id="timezone" transition:fade={{ delay: 0, duration: 200 }} class="timezone">Timezone: {timezone}</span>
               {/if}
-              <span>{timeStr}</span>
-              <span class='ms'>{msStr}</span>
-              <span id="tower-cell" class='tower-cell ml-2'><Fa icon={faTowerCell} /></span>
             </div>
-          </time>
-        </h1>
-        <div class="info-div flex gap-2 flex-row justify-between w-full">
-          <div class="gap-2 flex items-center">
             {#if advancedShown && toggleShown}
-              <div transition:fade={{ delay: 0, duration: 200 }} class="theme-selector">
-                <button aria-label="Change to light mode" class="light" on:click={() => theme = 0}>{h}</button>
-                <span class="seperator">:</span>
-                <button aria-label="Change to dark mode" class="dark" on:click={() => theme = 1}>{m}</button>
-                <span class="seperator">:</span>
-                <button aria-label="Define a custom theme" class="custom" on:click={() => theme = 2}>{s}</button>
-              </div>
-              {#if theme === 2}
-                <ColorPicker
-                  bind:hex
-                  label=""
-                />
-                <ColorPicker
-                  bind:rgb
-                  label=""
-                />
-              {/if}
-              <button class="fs-button" on:click={() => {fullscreen = !fullscreen; onToggle();} }>
-                {#if fullscreen}
-                  <Fa icon={faCompress} />
-                {:else if !fullscreen}
-                  <Fa icon={faExpand} />
-                {/if}
-              </button>
-              <span id="timezone" transition:fade={{ delay: 0, duration: 200 }} class="timezone">Timezone: {timezone}</span>
+              <span transition:fade={{ delay: 0, duration: 200 }}>UTC: <time id="utc" datetime={utcDateStr}>{utcDateStr1} {utcTimeStr}</time></span>
             {/if}
           </div>
           {#if advancedShown && toggleShown}
-            <span transition:fade={{ delay: 0, duration: 200 }}>UTC: <time id="utc" datetime={utcDateStr}>{utcDateStr1} {utcTimeStr}</time></span>
+            <div transition:fade={{ delay: 0, duration: 200 }} class="flex flex-col gap-2 mt-4">
+              <span>Unix: <time id="unix" datetime={date.toTimeString()}>{date.getTime()}</time> </span>
+              <span>IP: {$page.data.ip}</span>
+              <span>General Location: {$page.data.city}, {$page.data.region}, {$page.data.country}</span>
+            </div>
           {/if}
         </div>
-        {#if advancedShown && toggleShown}
-          <div transition:fade={{ delay: 0, duration: 200 }} class="flex flex-col gap-2 mt-4">
-            <span>Unix: <time id="unix" datetime={date.toTimeString()}>{date.getTime()}</time> </span>
-            <span>IP: {$page.data.ip}</span>
-            <span>General Location: {$page.data.city}, {$page.data.region}, {$page.data.country}</span>
-          </div>
+        {#if toggleShown}
+          <a class="footer" href="https://gitlab.com/uimaxbai/time.okit.works" target="_blank">
+            <Fa icon={faGitlab} />
+          </a>
         {/if}
-      </div>
-      {#if toggleShown}
-        <a class="footer" href="https://gitlab.com/uimaxbai/time.okit.works" target="_blank">
-          <Fa icon={faGitlab} />
-        </a>
-      {/if}
-  </main>
+    </main>
+  {/snippet}
 </Fullscreen>
 
 
@@ -306,18 +308,18 @@ time div {
   import { onMount } from 'svelte';
   import Fullscreen from "$lib/Fullscreen.svelte";
   import ColorPicker from 'svelte-awesome-color-picker';
-  let theme = 1;
-  let toggleShown = true;
-  let hex: string = "#000000ff";
-  let fullscreen = false;
-  let rgb = {
+  let theme = $state(1);
+  let toggleShown = $state(true);
+  let hex: string = $state("#000000ff");
+  let fullscreen = $state(false);
+  let rgb = $state({
     "r": 255,
     "g": 255,
     "b": 255,
     "a": 1,
-  }
-  let advancedShown = false;
-  var date = new Date();
+  })
+  let advancedShown = $state(false);
+  var date = $state(new Date());
   let diff: number = 0;
 
   onMount(() => {
@@ -436,19 +438,19 @@ time div {
   };
 
   var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-  $: ms = ('0' + Math.floor(date.getMilliseconds() / 10)).slice(-2);
-  $: s = ('0' + date.getSeconds()).slice(-2);
-  $: m = ('0' + date.getMinutes()).slice(-2);
-  $: h = ('0' + date.getHours()).slice(-2);
-  $: d = ('0' + date.getDate()).slice(-2);
-  $: dateStr = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + "T" + h + ":" + m + ":" + s + "." + ms;
-  $: dateStr1 = (days[date.getDay()]).slice(0, 3) + " " + d + "/" + ('0' + (date.getMonth() + 1).toString()).slice(-2) + "/" + date.getFullYear();
-  $: timeStr = h + ":" + m + ":" + s;
-  $: msStr = "." + ms;
-  $: utcDateStr = date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + date.getUTCDate() + "T" + ('0' + date.getUTCHours()).slice(-2) + ":" + ('0' + date.getUTCMinutes()).slice(-2) + ":" + ('0' + date.getUTCSeconds()).slice(-2) + "." + ('0' + Math.floor(date.getUTCMilliseconds() / 10)).slice(-2);
-  $: utcTimeStr = ('0' + date.getUTCHours()).slice(-2) + ":" + ('0' + date.getUTCMinutes()).slice(-2) + ":" + ('0' + date.getUTCSeconds()).slice(-2) + "." + ('0' + Math.floor(date.getUTCMilliseconds() / 10)).slice(-2);
-  $: utcDateStr1 = ('0' + date.getUTCDate()).slice(-2) + "/" + ('0' + (date.getUTCMonth() + 1).toString()).slice(-2) + "/" + date.getUTCFullYear();
-  let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  let ms = $derived(('0' + Math.floor(date.getMilliseconds() / 10)).slice(-2));
+  let s = $derived(('0' + date.getSeconds()).slice(-2));
+  let m = $derived(('0' + date.getMinutes()).slice(-2));
+  let h = $derived(('0' + date.getHours()).slice(-2));
+  let d = $derived(('0' + date.getDate()).slice(-2));
+  let dateStr = $derived(date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + "T" + h + ":" + m + ":" + s + "." + ms);
+  let dateStr1 = $derived((days[date.getDay()]).slice(0, 3) + " " + d + "/" + ('0' + (date.getMonth() + 1).toString()).slice(-2) + "/" + date.getFullYear());
+  let timeStr = $derived(h + ":" + m + ":" + s);
+  let msStr = $derived("." + ms);
+  let utcDateStr = $derived(date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + date.getUTCDate() + "T" + ('0' + date.getUTCHours()).slice(-2) + ":" + ('0' + date.getUTCMinutes()).slice(-2) + ":" + ('0' + date.getUTCSeconds()).slice(-2) + "." + ('0' + Math.floor(date.getUTCMilliseconds() / 10)).slice(-2));
+  let utcTimeStr = $derived(('0' + date.getUTCHours()).slice(-2) + ":" + ('0' + date.getUTCMinutes()).slice(-2) + ":" + ('0' + date.getUTCSeconds()).slice(-2) + "." + ('0' + Math.floor(date.getUTCMilliseconds() / 10)).slice(-2));
+  let utcDateStr1 = $derived(('0' + date.getUTCDate()).slice(-2) + "/" + ('0' + (date.getUTCMonth() + 1).toString()).slice(-2) + "/" + date.getUTCFullYear());
+  let timezone = $state(Intl.DateTimeFormat().resolvedOptions().timeZone);
   var offset = date.getTimezoneOffset(), o = Math.abs(offset);
   var offsetStr = (offset > 0 ? "-" : "+") + ("00" + Math.floor(o / 60)).slice(-2) + ":" + ("00" + (o % 60)).slice(-2);
   timezone += ` (${offsetStr})`;
