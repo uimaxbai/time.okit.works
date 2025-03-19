@@ -284,14 +284,14 @@ time div {
           {#if advancedShown && toggleShown}
             <div transition:fade={{ delay: 0, duration: 200 }} class="flex flex-col gap-2 mt-4">
               <span>Unix: <time id="unix" datetime={date.toTimeString()}>{date.getTime()}</time> </span>
-              <span>IP: {$page.data.ip}</span>
-              <span>General Location: {$page.data.city}, {$page.data.region}, {$page.data.country}</span>
+              <span>IP: {ip.ip}</span>
+              <span>General Location: {ip.city}, {ip.region}, {ip.country}</span>
             </div>
           {/if}
         </div>
         {#if toggleShown}
-          <a class="footer" href="https://gitlab.com/uimaxbai/time.okit.works" target="_blank">
-            <Fa icon={faGitlab} />
+          <a class="footer" href="https://github.com/uimaxbai/time.okit.works" target="_blank">
+            <Fa icon={faGithub} />
           </a>
         {/if}
     </main>
@@ -303,8 +303,8 @@ time div {
   import Fa from '../../node_modules/svelte-fa/dist/fa.svelte';
   import { fade } from 'svelte/transition';
   import { faTowerCell, faAngleDown, faAngleUp, faExpand, faCompress } from '@fortawesome/free-solid-svg-icons/index.js';
-  import { faGitlab } from '@fortawesome/free-brands-svg-icons/index.js';
-  import { page } from '$app/stores';
+  import { faGithub } from '@fortawesome/free-brands-svg-icons/index.js';
+  import { page } from '$app/state';
   import { onMount } from 'svelte';
   import Fullscreen from "$lib/Fullscreen.svelte";
   import ColorPicker from 'svelte-awesome-color-picker';
@@ -317,11 +317,14 @@ time div {
     "g": 255,
     "b": 255,
     "a": 1,
-  })
+  });
   let advancedShown = $state(false);
   var date = $state(new Date());
   let diff: number = 0;
-
+  let ip = $derived(page.data);
+  /* $effect(() => {
+    console.log(ip);
+  }) */
   onMount(() => {
     theme = parseInt(localStorage.getItem("theme") || "1");
     localStorage.setItem("theme", theme.toString());
@@ -343,7 +346,7 @@ time div {
       var re = new RegExp(botPattern, 'i');
       var userAgent = navigator.userAgent; 
       if (!(re.test(userAgent))) {
-        document.title = `${timeStr} (${$page.data.city}, ${$page.data.country}) | The Time`;
+        document.title = `${timeStr} (${ip.city}, ${ip.country}) | The Time`;
       }
       localStorage.setItem("theme", theme.toString());
       if (theme === 2) {
@@ -351,6 +354,39 @@ time div {
         localStorage.setItem("rgb", JSON.stringify(rgb));
       }
     }, 10);
+    actuallyGetTime().then((time) => {
+      if (time === null) {
+        clearInterval(timeApiInterval);
+        timeApiInterval = setInterval(() => {
+          actuallyGetTime().then((time) => {
+            if (time === null) {
+              clearInterval(timeApiInterval);
+
+            }
+            else {
+              date = new Date(time);
+              clearInterval(timeApiInterval);
+            }
+          });
+        }, 10000);
+      }
+      else {
+        date = new Date(time);
+        clearInterval(timeApiInterval);
+        timeApiInterval = setInterval(() => {
+          actuallyGetTime().then((time) => {
+            if (time === null) {
+              clearInterval(timeApiInterval);
+
+            }
+            else {
+              date = new Date(time);
+              clearInterval(timeApiInterval);
+            }
+          });
+        }, 2500);
+      }
+    });
     var timeApiInterval = setInterval(() => {
       actuallyGetTime().then((time) => {
         if (time === null) {
@@ -450,19 +486,19 @@ time div {
   let utcDateStr = $derived(date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + date.getUTCDate() + "T" + ('0' + date.getUTCHours()).slice(-2) + ":" + ('0' + date.getUTCMinutes()).slice(-2) + ":" + ('0' + date.getUTCSeconds()).slice(-2) + "." + ('0' + Math.floor(date.getUTCMilliseconds() / 10)).slice(-2));
   let utcTimeStr = $derived(('0' + date.getUTCHours()).slice(-2) + ":" + ('0' + date.getUTCMinutes()).slice(-2) + ":" + ('0' + date.getUTCSeconds()).slice(-2) + "." + ('0' + Math.floor(date.getUTCMilliseconds() / 10)).slice(-2));
   let utcDateStr1 = $derived(('0' + date.getUTCDate()).slice(-2) + "/" + ('0' + (date.getUTCMonth() + 1).toString()).slice(-2) + "/" + date.getUTCFullYear());
-  let timezone = $state(Intl.DateTimeFormat().resolvedOptions().timeZone);
-  var offset = date.getTimezoneOffset(), o = Math.abs(offset);
-  var offsetStr = (offset > 0 ? "-" : "+") + ("00" + Math.floor(o / 60)).slice(-2) + ":" + ("00" + (o % 60)).slice(-2);
-  timezone += ` (${offsetStr})`;
+
+  let timezone = $derived(Intl.DateTimeFormat().resolvedOptions().timeZone
+                        + ` (${(date.getTimezoneOffset() > 0 ? "-" : "+") + ("00" + Math.floor(Math.abs(date.getTimezoneOffset()) / 60)).slice(-2) + ":" + ("00" + (Math.abs(date.getTimezoneOffset()) % 60)).slice(-2)})`);
 
   async function getTime(timezone: string) {
     try {
-      const response = await fetch('https://worldtimeapi.org/api/ip');
+      const response = await fetch('https://use.ntpjs.org/v1/time.json');
       if (!response.ok) {
         throw new Error("Server returned non-OK status. Error code: "+response.status + " " + response.statusText)
       }
       const data = await response.json();
-      const serverTime = new Date(Date.parse(data.datetime));
+      const serverTime = new Date(data.now * 1000);
+      // console.log(data.now);
       const localTime = new Date();
       diff = serverTime.getTime() - localTime.getTime();
       return diff;

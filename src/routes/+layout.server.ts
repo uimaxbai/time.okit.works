@@ -4,6 +4,7 @@ export async function load({ locals }) {
     // console.log(locals.ip);
     try {
         const clientIP: string = locals.ip;
+        console.log(locals);
         const response = await fetch(`https://ipinfo.io/${clientIP}?token=${IPINFO_API_KEY}`);
         const data = await response.json();
         const country = data.country;
