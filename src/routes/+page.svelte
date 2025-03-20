@@ -177,6 +177,9 @@ time div {
   border-radius: 5px;
   padding: .5em;
 }
+.delay {
+  font-size: 0.5rem;
+}
 </style>
 
 
@@ -243,7 +246,15 @@ time div {
                 {/if}
                 <span>{timeStr}</span>
                 <span class='ms'>{msStr}</span>
-                <span id="tower-cell" class='tower-cell ml-2'><Fa icon={faTowerCell} /></span>
+                {#if syncing}
+                  <span transition:fade id="tower-cell" class='tower-cell ml-2'><Fa icon={faRotate} /></span>
+                {:else}
+                  <span transition:fade id="tower-cell" class='tower-cell ml-2'><Fa icon={faTowerCell} /></span>
+                  <div style="display: flex; flex-direction: column; margin-bottom: 0.5rem;">
+                    <span class="delay">D:{diff}ms</span>
+                    <span class="delay">L:{lastUpdated}</span>
+                  </div>
+                {/if}
               </div>
             </time>
           </h1>
@@ -284,8 +295,8 @@ time div {
           {#if advancedShown && toggleShown}
             <div transition:fade={{ delay: 0, duration: 200 }} class="flex flex-col gap-2 mt-4">
               <span>Unix: <time id="unix" datetime={date.toTimeString()}>{date.getTime()}</time> </span>
-              <span>IP: {ip.ip}</span>
-              <span>General Location: {ip.city}, {ip.region}, {ip.country}</span>
+              <span>IP: {ip.query}</span>
+              <span>Location: {ip.city}, {ip.region}, {ip.country} ({ip.isp})</span>
             </div>
           {/if}
         </div>
@@ -300,9 +311,10 @@ time div {
 
 
 <script lang="ts">
+  import '../app.css';
   import Fa from '../../node_modules/svelte-fa/dist/fa.svelte';
   import { fade } from 'svelte/transition';
-  import { faTowerCell, faAngleDown, faAngleUp, faExpand, faCompress } from '@fortawesome/free-solid-svg-icons/index.js';
+  import { faTowerCell, faAngleDown, faAngleUp, faExpand, faCompress, faRotate } from '@fortawesome/free-solid-svg-icons/index.js';
   import { faGithub } from '@fortawesome/free-brands-svg-icons/index.js';
   import { page } from '$app/state';
   import { onMount } from 'svelte';
@@ -311,7 +323,9 @@ time div {
   let theme = $state(1);
   let toggleShown = $state(true);
   let hex: string = $state("#000000ff");
+  let lastUpdated = $state("Never");
   let fullscreen = $state(false);
+  let syncing = $state(false);
   let rgb = $state({
     "r": 255,
     "g": 255,
@@ -320,8 +334,34 @@ time div {
   });
   let advancedShown = $state(false);
   var date = $state(new Date());
-  let diff: number = 0;
-  let ip = $derived(page.data);
+  let diff: number = $state(0);
+  let ip = $state({
+    "status": "success",
+    "country": "United Kingdom",
+    "countryCode": "GB",
+    "region": "ENG",
+    "regionName": "England",
+    "city": "Harrow",
+    "zip": "HA1",
+    "lat": 51.5828,
+    "lon": -0.3448,
+    "timezone": "Europe/London",
+    "isp": "Gamma Telecom Holdings Ltd",
+    "org": "Gamma Telecom Limited",
+    "as": "AS31655 Gamma Telecom Holdings Ltd",
+    "query": "51.219.209.114"
+  });
+  const getIP = async () => {
+    let ipR = await fetch("https://ip-api.com/json/");
+    let data = await ipR.json();
+    return data;
+  }
+  fetch("https://ipapi.co/json").then((d) => {
+    return d.json()
+  }).then((d) => {
+    ip = d;
+  })
+  // console.log(ip);
   /* $effect(() => {
     console.log(ip);
   }) */
@@ -501,30 +541,39 @@ time div {
       // console.log(data.now);
       const localTime = new Date();
       diff = serverTime.getTime() - localTime.getTime();
+      console.log(diff);
       return diff;
     }
     catch (e) {
       console.error(e);
+      syncing = false;
       return null;
     }
+    
   }
 
   async function actuallyGetTime() {
+    syncing = true;
+    var a = new Date()
+    lastUpdated = `${h}:${m}:${s}`
     let timezoneRaw = Intl.DateTimeFormat().resolvedOptions().timeZone;
     let response = await getTime(timezoneRaw);
     if (response === null) {
       document.getElementById("tower-cell")!.style.opacity = "0.5";
+      syncing = false;
       return null;
     }
     else {
       if (Number.isNaN(response)) {
         document.getElementById("tower-cell")!.style.opacity = "0.5";
+        syncing = false;
         return null;
       }
       else {
         document.getElementById("tower-cell")!.style.opacity = "1";
       }
       let date1 = new Date((new Date()).getTime() + response);
+      syncing = false;
       return date1.getTime();
     }
   }

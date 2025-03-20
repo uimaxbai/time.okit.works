@@ -1,16 +1,18 @@
-# newtime
+# time.binimum.org
+
+(The URL's changed)
 
 A new time.
 
-EDIT: it's done.
+~EDIT: it's done.~
 
 Predecessor to `thetime`.
 
-Visit me [here](https://time.okit.works) or [here](https://thetime.pages.dev) (backup).
+Visit me [here](https://time.binimum.org) or [here](https://time.okiw.me) (backup).
 
 ## Features
 
-- Networked time (synced to the World Time API).
+- Networked time (synced to `ntpjs`'s API).
 - Themes (dark, light and custom)
 - Themes are saved in localStorage
 - Minimal interface
