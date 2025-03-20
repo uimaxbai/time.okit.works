@@ -99,10 +99,14 @@ time div {
   .tower-cell {
     font-size: 5vw;
   }
+  
 }
 @media (max-width: 550px) {
   .info-div {
     margin-top: 0!important;
+  }
+  .techInfo {
+    display: none!important;
   }
 }
 
@@ -223,7 +227,7 @@ time div {
   </script>
 </svelte:head>
 
-<Fullscreen >
+<Fullscreen>
   {#snippet children({ onToggle })}
     <main class="main transition flex min-h-screen flex-col items-center justify-center p-4" class:dark={theme === 1} class:light={theme === 0} style="background: {hex}; color: rgba({rgb.r}, {rgb.g}, {rgb.b}, {rgb.a});">
         <div>
@@ -247,15 +251,17 @@ time div {
                 <span>{timeStr}</span>
                 <span class='ms'>{msStr}</span>
                 {#if syncing}
-                  <span transition:fade id="tower-cell" class='tower-cell ml-2'><Fa icon={faRotate} /></span>
+                  <span id="tower-cell" class='tower-cell ml-2'><Fa icon={faRotate} /></span>
                 {:else}
-                  <span transition:fade id="tower-cell" class='tower-cell ml-2'><Fa icon={faTowerCell} /></span>
-                  <div style="display: flex; flex-direction: column; margin-bottom: 0.5rem;">
-                    <span class="delay">D:{diff}ms</span>
-                    <span class="delay">L:{lastUpdated}</span>
-                  </div>
+                  <span id="tower-cell" class='tower-cell ml-2'><Fa icon={faTowerCell} /></span>
                 {/if}
-              </div>
+                {#if toggleShown}
+                    <div transition:fade={{ delay: 0, duration: 200 }} class="techInfo" style="display: flex; flex-direction: column;">
+                      <span class="delay">D:{diff}ms</span>
+                      <span class="delay">L:{lastUpdated}</span>
+                    </div>
+                {/if}
+                </div>
             </time>
           </h1>
           <div class="info-div flex gap-2 flex-row justify-between w-full">
@@ -316,7 +322,6 @@ time div {
   import { fade } from 'svelte/transition';
   import { faTowerCell, faAngleDown, faAngleUp, faExpand, faCompress, faRotate } from '@fortawesome/free-solid-svg-icons/index.js';
   import { faGithub } from '@fortawesome/free-brands-svg-icons/index.js';
-  import { page } from '$app/state';
   import { onMount } from 'svelte';
   import Fullscreen from "$lib/Fullscreen.svelte";
   import ColorPicker from 'svelte-awesome-color-picker';
@@ -337,35 +342,49 @@ time div {
   let diff: number = $state(0);
   let ip = $state({
     "status": "success",
-    "country": "United Kingdom",
-    "countryCode": "GB",
-    "region": "ENG",
-    "regionName": "England",
-    "city": "Harrow",
-    "zip": "HA1",
-    "lat": 51.5828,
-    "lon": -0.3448,
-    "timezone": "Europe/London",
-    "isp": "Gamma Telecom Holdings Ltd",
-    "org": "Gamma Telecom Limited",
-    "as": "AS31655 Gamma Telecom Holdings Ltd",
-    "query": "51.219.209.114"
+    "country": "Loading...",
+    "countryCode": "",
+    "region": "",
+    "regionName": "",
+    "city": "",
+    "zip": "",
+    "lat": 0,
+    "lon": 0,
+    "timezone": "",
+    "isp": "",
+    "org": "",
+    "as": "",
+    "query": "Loading..."
   });
-  const getIP = async () => {
-    let ipR = await fetch("https://ip-api.com/json/");
-    let data = await ipR.json();
-    return data;
-  }
-  fetch("https://ipapi.co/json").then((d) => {
-    return d.json()
-  }).then((d) => {
-    ip = d;
-  })
+  
   // console.log(ip);
   /* $effect(() => {
     console.log(ip);
   }) */
   onMount(() => {
+    fetch("https://ipapi.co/json").then((d) => {
+      return d.json()
+    }).then((d) => {
+      ip = d;
+    }).catch((e) => {
+      ip = {
+        "status": "failed",
+        "country": "Failed",
+        "countryCode": "",
+        "region": "",
+        "regionName": "",
+        "city": "",
+        "zip": "",
+        "lat": 0,
+        "lon": 0,
+        "timezone": "",
+        "isp": "",
+        "org": "",
+        "as": "",
+        "query": "Failed"
+      };
+      console.error("Failed to get IP data:", e);
+    });
     theme = parseInt(localStorage.getItem("theme") || "1");
     localStorage.setItem("theme", theme.toString());
 
@@ -379,12 +398,12 @@ time div {
       fsEl?.requestFullscreen();
       fullscreen = !fullscreen;
     }); */
-
+    var botPattern = "(googlebot\/|bot|Googlebot-Mobile|Googlebot-Image|Google favicon|Mediapartners-Google|bingbot|slurp|java|wget|curl|Commons-HttpClient|Python-urllib|libwww|httpunit|nutch|phpcrawl|msnbot|jyxobot|FAST-WebCrawler|FAST Enterprise Crawler|biglotron|teoma|convera|seekbot|gigablast|exabot|ngbot|ia_archiver|GingerCrawler|webmon |httrack|webcrawler|grub.org|UsineNouvelleCrawler|antibot|netresearchserver|speedy|fluffy|bibnum.bnf|findlink|msrbot|panscient|yacybot|AISearchBot|IOI|ips-agent|tagoobot|MJ12bot|dotbot|woriobot|yanga|buzzbot|mlbot|yandexbot|purebot|Linguee Bot|Voyager|CyberPatrol|voilabot|baiduspider|citeseerxbot|spbot|twengabot|postrank|turnitinbot|scribdbot|page2rss|sitebot|linkdex|Adidxbot|blekkobot|ezooms|dotbot|Mail.RU_Bot|discobot|heritrix|findthatfile|europarchive.org|NerdByNature.Bot|sistrix crawler|ahrefsbot|Aboundex|domaincrawler|wbsearchbot|summify|ccbot|edisterbot|seznambot|ec2linkfinder|gslfbot|aihitbot|intelium_bot|facebookexternalhit|yeti|RetrevoPageAnalyzer|lb-spider|sogou|lssbot|careerbot|wotbox|wocbot|ichiro|DuckDuckBot|lssrocketcrawler|drupact|webcompanycrawler|acoonbot|openindexspider|gnam gnam spider|web-archive-net.com.bot|backlinkcrawler|coccoc|integromedb|content crawler spider|toplistbot|seokicks-robot|it2media-domain-crawler|ip-web-crawler.com|siteexplorer.info|elisabot|proximic|changedetection|blexbot|arabot|WeSEE:Search|niki-bot|CrystalSemanticsBot|rogerbot|360Spider|psbot|InterfaxScanBot|Lipperhey SEO Service|CC Metadata Scaper|g00g1e.net|GrapeshotCrawler|urlappendbot|brainobot|fr-crawler|binlar|SimpleCrawler|Livelapbot|Twitterbot|cXensebot|smtbot|bnf.fr_bot|A6-Indexer|ADmantX|Facebot|Twitterbot|OrangeBot|memorybot|AdvBot|MegaIndex|SemanticScholarBot|ltx71|nerdybot|xovibot|BUbiNG|Qwantify|archive.org_bot|Applebot|TweetmemeBot|crawler4j|findxbot|SemrushBot|yoozBot|lipperhey|y!j-asr|Domain Re-Animator Bot|AddThis)";
+    var re = new RegExp(botPattern, 'i');
+    var userAgent = navigator.userAgent; 
     setInterval(() => {
       date = new Date((new Date()).getTime() + diff);
-      var botPattern = "(googlebot\/|bot|Googlebot-Mobile|Googlebot-Image|Google favicon|Mediapartners-Google|bingbot|slurp|java|wget|curl|Commons-HttpClient|Python-urllib|libwww|httpunit|nutch|phpcrawl|msnbot|jyxobot|FAST-WebCrawler|FAST Enterprise Crawler|biglotron|teoma|convera|seekbot|gigablast|exabot|ngbot|ia_archiver|GingerCrawler|webmon |httrack|webcrawler|grub.org|UsineNouvelleCrawler|antibot|netresearchserver|speedy|fluffy|bibnum.bnf|findlink|msrbot|panscient|yacybot|AISearchBot|IOI|ips-agent|tagoobot|MJ12bot|dotbot|woriobot|yanga|buzzbot|mlbot|yandexbot|purebot|Linguee Bot|Voyager|CyberPatrol|voilabot|baiduspider|citeseerxbot|spbot|twengabot|postrank|turnitinbot|scribdbot|page2rss|sitebot|linkdex|Adidxbot|blekkobot|ezooms|dotbot|Mail.RU_Bot|discobot|heritrix|findthatfile|europarchive.org|NerdByNature.Bot|sistrix crawler|ahrefsbot|Aboundex|domaincrawler|wbsearchbot|summify|ccbot|edisterbot|seznambot|ec2linkfinder|gslfbot|aihitbot|intelium_bot|facebookexternalhit|yeti|RetrevoPageAnalyzer|lb-spider|sogou|lssbot|careerbot|wotbox|wocbot|ichiro|DuckDuckBot|lssrocketcrawler|drupact|webcompanycrawler|acoonbot|openindexspider|gnam gnam spider|web-archive-net.com.bot|backlinkcrawler|coccoc|integromedb|content crawler spider|toplistbot|seokicks-robot|it2media-domain-crawler|ip-web-crawler.com|siteexplorer.info|elisabot|proximic|changedetection|blexbot|arabot|WeSEE:Search|niki-bot|CrystalSemanticsBot|rogerbot|360Spider|psbot|InterfaxScanBot|Lipperhey SEO Service|CC Metadata Scaper|g00g1e.net|GrapeshotCrawler|urlappendbot|brainobot|fr-crawler|binlar|SimpleCrawler|Livelapbot|Twitterbot|cXensebot|smtbot|bnf.fr_bot|A6-Indexer|ADmantX|Facebot|Twitterbot|OrangeBot|memorybot|AdvBot|MegaIndex|SemanticScholarBot|ltx71|nerdybot|xovibot|BUbiNG|Qwantify|archive.org_bot|Applebot|TweetmemeBot|crawler4j|findxbot|SemrushBot|yoozBot|lipperhey|y!j-asr|Domain Re-Animator Bot|AddThis)";
-      var re = new RegExp(botPattern, 'i');
-      var userAgent = navigator.userAgent; 
+      
       if (!(re.test(userAgent))) {
         document.title = `${timeStr} (${ip.city}, ${ip.country}) | The Time`;
       }
@@ -395,73 +414,21 @@ time div {
       }
     }, 10);
     actuallyGetTime().then((time) => {
-      if (time === null) {
-        clearInterval(timeApiInterval);
-        timeApiInterval = setInterval(() => {
-          actuallyGetTime().then((time) => {
-            if (time === null) {
-              clearInterval(timeApiInterval);
-
-            }
-            else {
-              date = new Date(time);
-              clearInterval(timeApiInterval);
-            }
-          });
-        }, 10000);
-      }
-      else {
-        date = new Date(time);
-        clearInterval(timeApiInterval);
-        timeApiInterval = setInterval(() => {
-          actuallyGetTime().then((time) => {
-            if (time === null) {
-              clearInterval(timeApiInterval);
-
-            }
-            else {
-              date = new Date(time);
-              clearInterval(timeApiInterval);
-            }
-          });
-        }, 2500);
-      }
+      actuallyGetTime().then((time) => {
+        // console.log("a");
+        if (time !== null) {
+          date = new Date(time);
+        }
+      });
     });
     var timeApiInterval = setInterval(() => {
       actuallyGetTime().then((time) => {
-        if (time === null) {
-          clearInterval(timeApiInterval);
-          timeApiInterval = setInterval(() => {
-            actuallyGetTime().then((time) => {
-              if (time === null) {
-                clearInterval(timeApiInterval);
-
-              }
-              else {
-                date = new Date(time);
-                clearInterval(timeApiInterval);
-              }
-            });
-          }, 10000);
-        }
-        else {
+        // console.log("a");
+        if (time !== null) {
           date = new Date(time);
-          clearInterval(timeApiInterval);
-          timeApiInterval = setInterval(() => {
-            actuallyGetTime().then((time) => {
-              if (time === null) {
-                clearInterval(timeApiInterval);
-
-              }
-              else {
-                date = new Date(time);
-                clearInterval(timeApiInterval);
-              }
-            });
-          }, 2500);
         }
       });
-    }, 2500);
+    }, 5000);
 
     var mousedown = false;
     let timeout: number;
@@ -541,7 +508,7 @@ time div {
       // console.log(data.now);
       const localTime = new Date();
       diff = serverTime.getTime() - localTime.getTime();
-      console.log(diff);
+      // console.log(diff);
       return diff;
     }
     catch (e) {
@@ -554,8 +521,7 @@ time div {
 
   async function actuallyGetTime() {
     syncing = true;
-    var a = new Date()
-    lastUpdated = `${h}:${m}:${s}`
+    lastUpdated = "Syncing...";
     let timezoneRaw = Intl.DateTimeFormat().resolvedOptions().timeZone;
     let response = await getTime(timezoneRaw);
     if (response === null) {
@@ -574,6 +540,7 @@ time div {
       }
       let date1 = new Date((new Date()).getTime() + response);
       syncing = false;
+      lastUpdated = `${h}:${m}:${s}`
       return date1.getTime();
     }
   }
