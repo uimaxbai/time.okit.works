@@ -301,8 +301,8 @@ time div {
           {#if advancedShown && toggleShown}
             <div transition:fade={{ delay: 0, duration: 200 }} class="flex flex-col gap-2 mt-4">
               <span>Unix: <time id="unix" datetime={date.toTimeString()}>{date.getTime()}</time> </span>
-              <span>IP: {ip.query}</span>
-              <span>Location: {ip.city}, {ip.region}, {ip.country} ({ip.isp})</span>
+              <span>IP: {ip.query == "" || ip.query === undefined ? "None" : ip.query}</span>
+              <span>Location: {ip.city}, {ip.region}, {ip.country} {ip.isp === undefined || ip.isp === "" ? "" : `(${ip.isp})`}</span>
             </div>
           {/if}
         </div>
@@ -428,7 +428,7 @@ time div {
           date = new Date(time);
         }
       });
-    }, 5000);
+    }, 10000);
 
     var mousedown = false;
     let timeout: number;
