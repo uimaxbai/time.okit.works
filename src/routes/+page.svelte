@@ -27,8 +27,8 @@
   left: 0;
 }
 
-.dateString {
-  font-size: 1.5rem;
+.dateString, .dateString span {
+  font-size: 2vw;
 }
 
 h1 time span {
@@ -111,7 +111,7 @@ time div {
 }
 
 .tower-cell {
-  font-size: 2rem;
+  font-size: 3vw;
 }
 .toggleButton {
   padding: .5rem;
@@ -182,8 +182,30 @@ time div {
   padding: .5em;
 }
 .delay {
-  font-size: 0.5rem;
+  font-size: 1vw;
 }
+
+@media (orientation: portrait) {
+  .colon, .dot {
+    display: none;
+  }
+  div.time-container {
+    flex-direction: column;
+    .t {
+      font-size: 30vh;
+      line-height: 30vh;
+    }
+    .s {
+      font-size: 15vh;
+      line-height: 15vh;
+    }
+    .ms {
+      font-size: 5vh;
+      line-height: 5vh;
+    }
+  }
+}
+
 </style>
 
 
@@ -233,8 +255,11 @@ time div {
         <div>
           <h1 class="timeStr">
             <time datetime={dateStr} class="timeEl flex flex-col">
-              <span class="dateString">{dateStr1}</span>
-              <div class="flex items-baseline">
+              <div class="dateString">
+                <span class="day">{day}</span>
+                <span class="date">{dateStr1}</span>
+              </div>
+              <div class="flex items-baseline time-container">
                 {#if toggleShown}
                   <button transition:fade={{ delay: 0, duration: 200 }} aria-label="Show options" onclick={() => advancedShown = !advancedShown} class="toggleButton">
                     {#if advancedShown}
@@ -248,8 +273,15 @@ time div {
                     {/if}
                   </button>
                 {/if}
-                <span>{timeStr}</span>
-                <span class='ms'>{msStr}</span>
+                <span class="t h">{h}</span>
+                <span class="colon">:</span>
+                <span class="t m">{m}</span>
+                <span class="colon">:</span>
+                <div class="flex items-baseline">
+                  <span class="t s">{s}</span>
+                  <span class="ms dot">.</span>
+                  <span class='t ms'>{ms}</span>
+                </div>
                 {#if syncing}
                   <span id="tower-cell" class='tower-cell ml-2'><Fa icon={faRotate} /></span>
                 {:else}
@@ -301,8 +333,8 @@ time div {
           {#if advancedShown && toggleShown}
             <div transition:fade={{ delay: 0, duration: 200 }} class="flex flex-col gap-2 mt-4">
               <span>Unix: <time id="unix" datetime={date.toTimeString()}>{date.getTime()}</time> </span>
-              <span>IP: {ip.query == "" || ip.query === undefined ? "None" : ip.query}</span>
-              <span>Location: {ip.city}, {ip.region}, {ip.country} {ip.isp === undefined || ip.isp === "" ? "" : `(${ip.isp})`}</span>
+              <span>IP: {ip.ipAddress == "" || ip.ipAddress === undefined ? "None" : ip.ipAddress}</span>
+              <span>Location: {ip.cityName}, {ip.regionName}, {ip.countryCode}</span>
             </div>
           {/if}
         </div>
@@ -341,20 +373,30 @@ time div {
   var date = $state(new Date());
   let diff: number = $state(0);
   let ip = $state({
-    "status": "success",
-    "country": "Loading...",
-    "countryCode": "",
-    "region": "",
-    "regionName": "",
-    "city": "",
-    "zip": "",
-    "lat": 0,
-    "lon": 0,
-    "timezone": "",
-    "isp": "",
-    "org": "",
-    "as": "",
-    "query": "Loading..."
+    "ipVersion": 4,
+    "ipAddress": "Loading...",
+    "latitude": 50,
+    "longitude": 0,
+    "countryName": "",
+    "countryCode": "Loading...",
+    "timeZone": "+00:00",
+    "zipCode": "",
+    "cityName": "Loading...",
+    "regionName": "Loading...",
+    "isProxy": false,
+    "continent": "Loading...",
+    "continentCode": "Loading...",
+    "currency": {
+      "code": "Loading...",
+      "name": "Loading..."
+    },
+    "language": "Loading...",
+    "timeZones": [
+      "Loading..."
+    ],
+    "tlds": [
+      "Loading..."
+    ]
   });
   
   // console.log(ip);
@@ -362,26 +404,36 @@ time div {
     console.log(ip);
   }) */
   onMount(() => {
-    fetch("https://ipapi.co/json").then((d) => {
+    fetch("https://freeipapi.com/api/json").then((d) => {
       return d.json()
     }).then((d) => {
       ip = d;
     }).catch((e) => {
       ip = {
-        "status": "failed",
-        "country": "Failed",
-        "countryCode": "",
-        "region": "",
-        "regionName": "",
-        "city": "",
-        "zip": "",
-        "lat": 0,
-        "lon": 0,
-        "timezone": "",
-        "isp": "",
-        "org": "",
-        "as": "",
-        "query": "Failed"
+        "ipVersion": 4,
+        "ipAddress": "Failed",
+        "latitude": 50,
+        "longitude": 0,
+        "countryName": "",
+        "countryCode": "Failed",
+        "timeZone": "+00:00",
+        "zipCode": "",
+        "cityName": "Failed",
+        "regionName": "Failed",
+        "isProxy": false,
+        "continent": "Failed",
+        "continentCode": "Failed",
+        "currency": {
+          "code": "Failed",
+          "name": "Failed"
+        },
+        "language": "Failed",
+        "timeZones": [
+          "Failed"
+        ],
+        "tlds": [
+          "Failed"
+        ]
       };
       console.error("Failed to get IP data:", e);
     });
@@ -405,7 +457,7 @@ time div {
       date = new Date((new Date()).getTime() + diff);
       
       if (!(re.test(userAgent))) {
-        document.title = `${timeStr} (${ip.city}, ${ip.country}) | The Time`;
+        document.title = `${timeStr} (${ip.cityName}, ${ip.countryCode}) | The Time`;
       }
       localStorage.setItem("theme", theme.toString());
       if (theme === 2) {
@@ -487,7 +539,8 @@ time div {
   let h = $derived(('0' + date.getHours()).slice(-2));
   let d = $derived(('0' + date.getDate()).slice(-2));
   let dateStr = $derived(date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + "T" + h + ":" + m + ":" + s + "." + ms);
-  let dateStr1 = $derived((days[date.getDay()]).slice(0, 3) + " " + d + "/" + ('0' + (date.getMonth() + 1).toString()).slice(-2) + "/" + date.getFullYear());
+  let day = $derived(days[date.getDay()].slice(0, 3));
+  let dateStr1 = $derived(d + "/" + ('0' + (date.getMonth() + 1).toString()).slice(-2) + "/" + date.getFullYear());
   let timeStr = $derived(h + ":" + m + ":" + s);
   let msStr = $derived("." + ms);
   let utcDateStr = $derived(date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + date.getUTCDate() + "T" + ('0' + date.getUTCHours()).slice(-2) + ":" + ('0' + date.getUTCMinutes()).slice(-2) + ":" + ('0' + date.getUTCSeconds()).slice(-2) + "." + ('0' + Math.floor(date.getUTCMilliseconds() / 10)).slice(-2));
