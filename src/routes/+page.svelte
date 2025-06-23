@@ -383,31 +383,43 @@ time div {
     "zipCode": "",
     "cityName": "Loading...",
     "regionName": "Loading...",
-    "isProxy": false,
+    "connectionType": false,
     "continent": "Loading...",
     "continentCode": "Loading...",
-    "currency": {
-      "code": "Loading...",
-      "name": "Loading..."
-    },
-    "language": "Loading...",
-    "timeZones": [
-      "Loading..."
-    ],
-    "tlds": [
-      "Loading..."
-    ]
+    "accuracy": 0,
+    "language": "",
   });
   
   // console.log(ip);
   /* $effect(() => {
     console.log(ip);
   }) */
+  const myHeaders = new Headers();
+  myHeaders.append("Origin", "https://www.maxmind.com");
+  myHeaders.append("Referer", "https://www.maxmind.com");
+  myHeaders.append("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36");
+  // myHeaders.append("Cookie", "_cfuvid=zGcahtEdqkzsWjhQxwlXlF756GPN3O0HSKtl_tBmFp0-1750693233628-0.0.1.1-604800000");
+  const requestOptions = {
+    method: "GET",
+    headers: myHeaders,
+    redirect: "follow"
+  };
+
   onMount(() => {
-    fetch("https://freeipapi.com/api/json").then((d) => {
+    fetch("https://geoip.maxmind.com/geoip/v2.1/city/me", requestOptions).then((d) => {
       return d.json()
     }).then((d) => {
-      ip = d;
+      ip.ipAddress = d.traits.ip_address;
+      ip.cityName = d.city.names.en;
+      ip.latitude = d.location.latitude;
+      ip.longitude = d.location.longitude;
+      ip.countryName = d.registered_country.names.en;
+      ip.countryCode = d.registered_country.iso_code;
+      ip.timeZone = d.location.time_zone;
+      ip.zipCode = d.postal.code;
+      ip.regionName = d.subdivisions[0].names.en;
+      ip.connectionType = d.traits.connection_type;
+      ip.accuracy = d.location.accuracy_radius;
     }).catch((e) => {
       ip = {
         "ipVersion": 4,
@@ -420,20 +432,11 @@ time div {
         "zipCode": "",
         "cityName": "Failed",
         "regionName": "Failed",
-        "isProxy": false,
+        "connectionType": "Failed",
         "continent": "Failed",
         "continentCode": "Failed",
-        "currency": {
-          "code": "Failed",
-          "name": "Failed"
-        },
+        "accuracy": 0,
         "language": "Failed",
-        "timeZones": [
-          "Failed"
-        ],
-        "tlds": [
-          "Failed"
-        ]
       };
       console.error("Failed to get IP data:", e);
     });
